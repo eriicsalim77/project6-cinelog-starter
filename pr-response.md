@@ -49,9 +49,13 @@ The reviewer said "most users want to see what they added recently" — this mat
 Small extension worth flagging: sort should eventually be a query parameter (?sort=date_added as default, with ?sort=title or ?sort=rating as opt-in). That way the default stays aligned with the common case, but power users who want a specific ordering can get it. Not scoped for this PR — flagging for a follow-up ticket.
 
 ## Comment 6 — Rebase
-**What conflicted:**
-**How I resolved it:**
-**How I verified no conflict remains:**
+**What conflicted:** My branch was cut from the initial commit, before main got the UUID refactor. So I rebased feature/watchlist onto upstream/main. The only real git conflict was .gitignore (both sides added one). The bigger problem was silent: models.py auto-merged with no conflict marker but dropped my whole WatchlistEntry class. It was added back in the integer era, and the 3-way merge threw it away against the refactored file. The routes and service also still documented film_id as an int.
+
+**How I resolved it:** For .gitignore I took the union, which was just upstream's version since it already had every line I added plus .pytest_cache. That made my .gitignore commit empty so it dropped out. For models.py I restored the WatchlistEntry class and set film_id to db.String(36) with a ForeignKey to film.id, matching Film.id and CollectionEntry after the refactor. Same UUID column, same pattern the collection code uses. Fixed the int docstrings in the route and service too. That went in as its own fix commit.
+
+Two things worth noting. The sort-order test I added earlier had already surfaced a separate pre-existing bug: get_watchlist accessed entry.film but Film had no watchlist_entries backref. That was fixed as its own commit before this rebase. And I reworded the base commit to feat: add watchlist model and endpoints so the whole branch uses conventional prefixes.
+
+**How I verified no conflict remains:** Ran git log --oneline feature/watchlist ^upstream/main and confirmed a linear history, no merge commits, every commit prefixed feat:/fix:/test:/docs:. Ran pytest tests/ -v — all 6 pass. Confirmed the endpoints work with UUID film_ids end to end (POST add returns 201, a second POST dedupes to the same entry, GET returns the film) using the Flask test client, which is the curl equivalent.
 
 ## PR Description
 <!-- Written at the end — feature overview, design decisions, manual testing steps -->
