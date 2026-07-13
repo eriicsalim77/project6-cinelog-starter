@@ -9,9 +9,11 @@
 **How I verified:** Ran a project-wide grep for save_to_watchlist to catch every call site before renaming. After changes, grepped again for both names to confirm no orphans. Ran pytest tests/ -v — all tests pass.
 
 ## Comment 2 — Deduplication
-**What I did:** Added a dedup check to add_to_watchlist that mirrors the pattern in add_to_collection. Before inserting a new WatchlistEntry, query for an existing entry with the same user_id and film_id. If one exists, return it instead of creating a duplicate.
+**What I did:** Added a dedup check to add_to_watchlist that mirrors the query pattern in add_to_collection. Before inserting a new WatchlistEntry, query for an existing entry with the same user_id and film_id. If one exists, return it instead of creating a duplicate.
 
-**How I verified:** Read add_to_collection first to match the pattern exactly (same query style, same return behavior). Then ran a manual test in a Python shell — called add_to_watchlist twice with the same user and film, queried the table, confirmed only one row exists. Ran pytest tests/ -v — all 4 tests still pass.
+The one deliberate difference from add_to_collection: it raises AlreadyInCollectionError, but I return the existing entry. The watchlist route has no error handling wrapper, so raising would 500 the request. Returning the existing entry keeps the endpoint consistent with itself (same 201 status either way) and is safe because the caller can't tell whether the entry was newly created or already existed.
+
+**How I verified:** Read the dedup block in add_to_collection first (lines 47-53) to match the query pattern. Then ran a manual test in a Python shell — called add_to_watchlist twice with the same user and film, queried WatchlistEntry.query.filter_by, confirmed only one row exists. Ran pytest tests/ -v — all 4 tests still pass.
 
 ## Comment 3 — Missing test
 **What I did:**
