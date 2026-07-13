@@ -16,8 +16,9 @@ The one deliberate difference from add_to_collection: it raises AlreadyInCollect
 **How I verified:** Read the dedup block in add_to_collection first (lines 47-53) to match the query pattern. Then ran a manual test in a Python shell — called add_to_watchlist twice with the same user and film, queried WatchlistEntry.query.filter_by, confirmed only one row exists. Ran pytest tests/ -v — all 4 tests still pass.
 
 ## Comment 3 — Missing test
-**What I did:**
-**How I verified:**
+**What I did:** Created tests/test_watchlist.py with test_add_to_watchlist_nonexistent_film_raises. Mirrored the structure of test_add_to_collection_nonexistent_film_raises exactly — same fixtures, same imports, same pytest.raises pattern.
+
+**How I verified:** Ran pytest tests/test_watchlist.py -v to confirm the new test passes. Ran pytest tests/ -v to confirm all tests still pass (5 total now — 4 collection + 1 watchlist).
 
 ## Comment 4 — Default visibility
 **My position:**
